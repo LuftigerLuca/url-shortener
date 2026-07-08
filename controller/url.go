@@ -41,12 +41,18 @@ func CreateShortUrl(c *gin.Context) {
 		res.Short = url.Short
 		res.ShortUrl = config.BaseUrl + "/" + url.Short
 
-		c.JSON(http.StatusCreated, res)
+		c.JSON(http.StatusOK, res)
 		return
 	}
 
 	url.Original = req.Url
-	url.Short = util.GenerateShortURL(8)
+
+	var err error
+	url.Short, err = util.GenerateShortURL(8)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	if req.Lifespan != nil {
 		url.Lifespan = *req.Lifespan
