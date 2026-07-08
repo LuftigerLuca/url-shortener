@@ -4,95 +4,52 @@ import (
 	"net/http"
 	"url-shortener/config"
 	"url-shortener/model"
-	"url-shortener/persistence"
-	"url-shortener/util"
+	"url-shortener/service"
 
 	"github.com/gin-gonic/gin"
 )
 
-type CreateUrlRequest struct {
-	Url      string `json:"url" binding:"required"`
-	Lifespan *int   `json:"lifespan"`
+type UrlController struct {
+	Service service.UrlService
 }
 
-type CreateUrlResponse struct {
-	Short    string `json:"short"`
-	ShortUrl string `json:"short_url"`
-}
-
-func CreateShortUrl(c *gin.Context) {
-	var req CreateUrlRequest
+func (ctrl *UrlController) CreateShortUrl(c *gin.Context) {
+	var req model.CreateUrlRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	url := model.URL{}
-
-	result := persistence.DB.Where("original = ?", req.Url).Find(&url)
-	if err := result.Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if result.RowsAffected > 0 {
-		res := CreateUrlResponse{}
-		res.Short = url.Short
-		res.ShortUrl = config.BaseUrl + "/" + url.Short
-
-		c.JSON(http.StatusOK, res)
-		return
-	}
-
-	url.Original = req.Url
-
-	var err error
-	url.Short, err = util.GenerateShortURL(8)
+	url, created, err := ctrl.Service.CreateShortUrl(req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(err.Code, gin.H{"error": err.Error()})
 		return
 	}
 
-	if req.Lifespan != nil {
-		url.Lifespan = *req.Lifespan
+	res := model.CreateUrlResponse{
+		Short:    url.Short,
+		ShortUrl: config.BaseUrl + "/" + url.Short,
+	}
+
+	if created {
+		c.JSON(http.StatusCreated, res)
 	} else {
-		url.Lifespan = config.DefaultLifespan
+		c.JSON(http.StatusOK, res)
 	}
-
-	if err := persistence.DB.Create(&url).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	res := CreateUrlResponse{}
-	res.Short = url.Short
-	res.ShortUrl = config.BaseUrl + "/" + url.Short
-
-	c.JSON(http.StatusCreated, res)
 }
 
-type DeleteUrlRequest struct {
-	Short string `json:"short" binding:"required"`
-}
-
-func DeleteShortUrl(c *gin.Context) {
-	var req DeleteUrlRequest
+func (ctrl *UrlController) DeleteShortUrl(c *gin.Context) {
+	var req model.DeleteUrlRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	url := model.URL{}
-	result := persistence.DB.Where("short = ?", req.Short).Delete(&url)
-	if err := result.Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "URL not found"})
+	err := ctrl.Service.DeleteShortUrl(req)
+	if err != nil {
+		c.JSON(err.Code, gin.H{"error": err.Error()})
 		return
 	}
 
