@@ -30,6 +30,6 @@ func main() {
 	mux.HandleFunc("/api/delete", urlCtrl.DeleteShortUrl)
 
 	if err := http.ListenAndServe(":8080", mux); err != nil {
-		slog.Error("Could not start the webserver:", err.Error())
+		slog.Error("Could not start the webserver:", "error", err.Error())
 	}
 }

@@ -36,10 +36,14 @@ func (ctrl *UrlController) CreateShortUrl(w http.ResponseWriter, r *http.Request
 	w.Header().Set("Content-Type", "application/json")
 	if created {
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(res)
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	} else {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(res)
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
 }
 
@@ -61,5 +65,7 @@ func (ctrl *UrlController) DeleteShortUrl(w http.ResponseWriter, r *http.Request
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(res)
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }

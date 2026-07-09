@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 	"url-shortener/config"
 	"url-shortener/model"
@@ -16,12 +15,12 @@ func ConnectDataBase() *gorm.DB {
 
 	DB, err := gorm.Open(mysql.Open(DBURI), &gorm.Config{})
 	if err != nil {
-		slog.Error("database connection error:", err)
+		slog.Error("database connection error:", "error", err.Error())
 	}
 
-	slog.Info("connected to database at", config.DBHost)
+	slog.Info("connected to database at", "host", config.DBHost)
 	if err := DB.AutoMigrate(&model.URL{}); err != nil {
-		log.Fatal("AutoMigrate error:", err)
+		slog.Error("AutoMigrate error:", "error", err.Error())
 	}
 
 	return DB
