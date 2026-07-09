@@ -4,6 +4,7 @@ import (
 	"log"
 	"url-shortener/controller"
 	"url-shortener/persistence"
+	"url-shortener/scheduler"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +22,9 @@ func main() {
 		api.POST("/create", urlCtrl.CreateShortUrl)
 		api.DELETE("/delete", urlCtrl.DeleteShortUrl)
 	}
+
+	scheduler := scheduler.Scheduler{}
+	go scheduler.Run()
 
 	if err := router.Run(":8080"); err != nil {
 		log.Fatal("could not start router:", err)

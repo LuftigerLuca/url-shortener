@@ -1,7 +1,9 @@
 package service
 
 import (
+	"log"
 	"net/http"
+	"time"
 	"url-shortener/config"
 	"url-shortener/model"
 	"url-shortener/persistence"
@@ -32,11 +34,14 @@ func (s *UrlService) CreateShortUrl(req model.CreateUrlRequest) (model.URL, bool
 		return url, false, &appErr
 	}
 
+	var lifespan uint
 	if req.Lifespan != nil {
-		url.Lifespan = *req.Lifespan
+		lifespan = *req.Lifespan
 	} else {
-		url.Lifespan = config.DefaultLifespan
+		lifespan = config.DefaultLifespan
 	}
+
+	url.Expires = time.Now().Add(time.Duration(lifespan) * time.Minute)
 
 	if err = persistence.DB.Create(&url).Error; err != nil {
 		appErr = model.AppError{Code: http.StatusInternalServerError, Message: err.Error()}
@@ -63,4 +68,17 @@ func (s *UrlService) DeleteShortUrl(req model.DeleteUrlRequest) *model.AppError 
 	}
 
 	return nil
+}
+
+func (s *UrlService) CheckForExpired() []model.URL {
+	var urls []model.URL
+
+	now := time.Now()
+	result := persistence.DB.Where("expires <= ?", now).Find(&urls)
+	if err := result.Error; err != nil {
+		log.Println("something went wrong while searching for expired urls: ", err.Error())
+		return urls
+	}
+
+	return urls
 }

@@ -8,8 +8,9 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var DefaultLifespan int
+var DefaultLifespan uint
 var BaseUrl string
+var CleanupInterval uint
 var DBDriver string
 var DBHost string
 var DBUser string
@@ -23,10 +24,17 @@ func init() {
 		log.Fatal("error loading .env file:", err)
 	}
 
-	DefaultLifespan, err = strconv.Atoi(os.Getenv("DEFAULT_LIFESPAN"))
+	lifespan, err := strconv.ParseUint(os.Getenv("DEFAULT_LIFESPAN"), 10, 64)
 	if err != nil {
 		log.Fatal("cannot parse default lifespan:", err)
 	}
+	DefaultLifespan = uint(lifespan)
+
+	cleanup, err := strconv.ParseUint(os.Getenv("CLEANUP_INTERVAL"), 10, 64)
+	if err != nil {
+		log.Fatal("cannot parse cleanup interval:", err)
+	}
+	CleanupInterval = uint(cleanup)
 
 	BaseUrl = os.Getenv("BASE_URL")
 

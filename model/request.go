@@ -2,7 +2,7 @@ package model
 
 type CreateUrlRequest struct {
 	Url      string `json:"url" binding:"required"`
-	Lifespan *int   `json:"lifespan"`
+	Lifespan *uint  `json:"lifespan"`
 }
 
 type DeleteUrlRequest struct {
