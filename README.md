@@ -1,5 +1,8 @@
 # URL Shortener
 
+[![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](https://go.dev)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A simple URL shortener service built with Go, Gin, GORM, and MySQL.
 
 ## Features
@@ -69,3 +72,7 @@ Delete a shortened URL.
 ### `GET /:short`
 
 Redirect to the original URL. Returns **404** if not found, **410 Gone** if expired.
+
+## License
+
+MIT
