@@ -4,30 +4,33 @@ import (
 	"net/http"
 	"time"
 	"url-shortener/model"
-	"url-shortener/persistence"
 
-	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func Redirect(c *gin.Context) {
-	short := c.Param("short")
+type RedirectController struct {
+	DB *gorm.DB
+}
+
+func (ctrl *RedirectController) Redirect(w http.ResponseWriter, r *http.Request) {
+	short := r.PathValue("short")
 
 	url := model.URL{}
-	result := persistence.DB.Where("short = ?", short).Find(&url)
+	result := ctrl.DB.Where("short = ?", short).Find(&url)
 	if err := result.Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if url.Original == "" {
-		c.JSON(http.StatusNotFound, gin.H{"error": "URL not found"})
+		http.Error(w, "URL not found", http.StatusNotFound)
 		return
 	}
 
 	if time.Now().After(url.Expires) {
-		c.JSON(http.StatusGone, gin.H{"error": "URL has expired"})
+		http.Error(w, "URL has expired", http.StatusGone)
 		return
 	}
 
-	c.Redirect(http.StatusMovedPermanently, url.Original)
+	http.Redirect(w, r, url.Original, http.StatusMovedPermanently)
 }

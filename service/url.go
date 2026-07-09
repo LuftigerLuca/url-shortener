@@ -6,18 +6,21 @@ import (
 	"time"
 	"url-shortener/config"
 	"url-shortener/model"
-	"url-shortener/persistence"
 	"url-shortener/util"
+
+	"gorm.io/gorm"
 )
 
-type UrlService struct{}
+type UrlService struct {
+	DB *gorm.DB
+}
 
 func (s *UrlService) CreateShortUrl(req model.CreateUrlRequest) (model.URL, bool, *model.AppError) {
 	var appErr model.AppError
 	var err error
 	url := model.URL{}
 
-	result := persistence.DB.Where("original = ?", req.Url).Find(&url)
+	result := s.DB.Where("original = ?", req.Url).Find(&url)
 	if err = result.Error; err != nil {
 		appErr = model.AppError{Code: http.StatusInternalServerError, Message: err.Error()}
 		return url, false, &appErr
@@ -28,7 +31,7 @@ func (s *UrlService) CreateShortUrl(req model.CreateUrlRequest) (model.URL, bool
 	}
 
 	url.Original = req.Url
-	url.Short, err = util.GenerateShortURL(config.ShortPathLength)
+	url.Short, err = util.GenerateShortURL(config.ShortPathLength, s.DB)
 	if err != nil {
 		appErr = model.AppError{Code: http.StatusInternalServerError, Message: err.Error()}
 		return url, false, &appErr
@@ -43,7 +46,7 @@ func (s *UrlService) CreateShortUrl(req model.CreateUrlRequest) (model.URL, bool
 
 	url.Expires = time.Now().Add(time.Duration(lifespan) * time.Minute)
 
-	if err = persistence.DB.Create(&url).Error; err != nil {
+	if err = s.DB.Create(&url).Error; err != nil {
 		appErr = model.AppError{Code: http.StatusInternalServerError, Message: err.Error()}
 		return url, false, &appErr
 	}
@@ -56,7 +59,7 @@ func (s *UrlService) DeleteShortUrl(req model.DeleteUrlRequest) *model.AppError 
 	var err error
 
 	url := model.URL{}
-	result := persistence.DB.Where("short = ?", req.Short).Delete(&url)
+	result := s.DB.Where("short = ?", req.Short).Delete(&url)
 	if err = result.Error; err != nil {
 		appErr = model.AppError{Code: http.StatusInternalServerError, Message: err.Error()}
 		return &appErr
@@ -74,7 +77,7 @@ func (s *UrlService) CheckForExpired() []model.URL {
 	var urls []model.URL
 
 	now := time.Now()
-	result := persistence.DB.Where("expires <= ?", now).Find(&urls)
+	result := s.DB.Where("expires <= ?", now).Find(&urls)
 	if err := result.Error; err != nil {
 		log.Println("something went wrong while searching for expired urls: ", err.Error())
 		return urls

@@ -3,7 +3,7 @@
 [![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](https://go.dev)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A simple URL shortener service built with Go, Gin, GORM, and MySQL.
+A simple URL shortener service built with Go, GORM, and MySQL.
 
 ## Features
 
@@ -15,7 +15,7 @@ A simple URL shortener service built with Go, Gin, GORM, and MySQL.
 ## Tech Stack
 
 - **Go 1.25** — application logic
-- **Gin** — HTTP router
+- **net/http** — HTTP router (standard library)
 - **GORM** — ORM / database layer
 - **MySQL** — database (compatible with MariaDB)
 - **Docker Compose** — local database setup

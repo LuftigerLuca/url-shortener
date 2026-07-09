@@ -1,32 +1,35 @@
 package main
 
 import (
-	"log"
+	"log/slog"
+	"net/http"
 	"url-shortener/controller"
 	"url-shortener/persistence"
-	"url-shortener/scheduler"
-
-	"github.com/gin-gonic/gin"
+	"url-shortener/service"
 )
 
 func main() {
-	persistence.ConnectDataBase()
+	DB := persistence.ConnectDataBase()
+	mux := http.NewServeMux()
 
-	router := gin.Default()
-	router.GET("/:short", controller.Redirect)
-
-	urlCtrl := controller.UrlController{}
-
-	api := router.Group("/api")
-	{
-		api.POST("/create", urlCtrl.CreateShortUrl)
-		api.DELETE("/delete", urlCtrl.DeleteShortUrl)
+	urlService := service.UrlService{
+		DB: DB,
 	}
 
-	scheduler := scheduler.Scheduler{}
-	go scheduler.Run()
+	redirectCtrl := controller.RedirectController{
+		DB: DB,
+	}
 
-	if err := router.Run(":8080"); err != nil {
-		log.Fatal("could not start router:", err)
+	urlCtrl := controller.UrlController{
+		Service: urlService,
+		DB:      DB,
+	}
+
+	mux.HandleFunc("/{short}", redirectCtrl.Redirect)
+	mux.HandleFunc("/api/create", urlCtrl.CreateShortUrl)
+	mux.HandleFunc("/api/delete", urlCtrl.DeleteShortUrl)
+
+	if err := http.ListenAndServe(":8080", mux); err != nil {
+		slog.Error("Could not start the webserver:", err.Error())
 	}
 }
