@@ -11,6 +11,7 @@ import (
 var DefaultLifespan uint
 var BaseUrl string
 var CleanupInterval uint
+var ShortPathLength uint
 var DBDriver string
 var DBHost string
 var DBUser string
@@ -35,6 +36,12 @@ func init() {
 		log.Fatal("cannot parse cleanup interval:", err)
 	}
 	CleanupInterval = uint(cleanup)
+
+	pathLength, err := strconv.ParseUint(os.Getenv("SHORT_PATH_LENGTH"), 10, 64)
+	if err != nil {
+		log.Fatal("cannot parse short path length:", err)
+	}
+	ShortPathLength = uint(pathLength)
 
 	BaseUrl = os.Getenv("BASE_URL")
 

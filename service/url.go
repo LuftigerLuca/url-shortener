@@ -28,7 +28,7 @@ func (s *UrlService) CreateShortUrl(req model.CreateUrlRequest) (model.URL, bool
 	}
 
 	url.Original = req.Url
-	url.Short, err = util.GenerateShortURL(8)
+	url.Short, err = util.GenerateShortURL(config.ShortPathLength)
 	if err != nil {
 		appErr = model.AppError{Code: http.StatusInternalServerError, Message: err.Error()}
 		return url, false, &appErr

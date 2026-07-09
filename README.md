@@ -48,6 +48,7 @@ A simple URL shortener service built with Go, Gin, GORM, and MySQL.
 | DEFAULT_LIFESPAN | 1440 | Default URL lifespan in minutes (24h) |
 | BASE_URL | http://localhost:8080 | Base URL for shortened links |
 | CLEANUP_INTERVAL | 1 | Expired URL cleanup interval in minutes |
+| SHORT_PATH_LENGTH | 6 | Length of generated short codes |
 
 ## API Endpoints
 
