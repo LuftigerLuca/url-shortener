@@ -2,10 +2,11 @@ package util
 
 import (
 	"math/rand"
-	"url-shortener/persistence"
+
+	"gorm.io/gorm"
 )
 
-func GenerateShortURL(length uint) (string, error) {
+func GenerateShortURL(length uint, db *gorm.DB) (string, error) {
 	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	result := make([]rune, length)
 
@@ -17,12 +18,12 @@ func GenerateShortURL(length uint) (string, error) {
 	short := string(result)
 
 	var exists bool
-	if err = persistence.DB.Table("urls").Select("count(*) > 0").Where("short = ?", short).Find(&exists).Error; err != nil {
+	if err = db.Table("urls").Select("count(*) > 0").Where("short = ?", short).Find(&exists).Error; err != nil {
 		return "", err
 	}
 
 	if exists {
-		short, err = GenerateShortURL(length)
+		short, err = GenerateShortURL(length, db)
 	}
 
 	return short, err
